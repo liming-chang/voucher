@@ -1,0 +1,91 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>T+凭证获取</title>
+    <link rel="stylesheet" href="./src/layuiadmin/layui/css/layui.css">
+</head>
+<body>
+
+    
+    <div>
+        <div class="layui-row ">
+            <table id="voucher" lay-filter="test" style="width: 800;"></table>
+        </div>
+        <div class="layui-row">
+            <div class="layui-col-md2 layui-col-md-offset5">
+                <button id="send" type="button" class="layui-btn layui-btn-primary">发送</button>
+            </div>
+        </div>
+    </div>
+    
+
+    <script src="src/layuiadmin/layui/layui.js"></script>
+    <script src="jquery-3.3.1/jquery-3.3.1.min.js"></script>
+    <script>
+        layui.use(['layer', 'form','table'], function () {
+            var layer = layui.layer,
+                table=layui.table,
+                form = layui.form;
+
+
+            table.render({
+                elem: '#voucher',
+                url: 'https://localhost:44379/api/voucher/fetch',
+                page: true,
+                cols: [[
+                    {title:'全选',checkbox: true},
+                    
+                    { field:'tVoucher', title: '凭证号' ,align:'center' },
+                    { field: 'userName', title: '操作人员',align:'center' },
+                    { field: 'execTime', title: '操作时间',align:'center' },
+                    { field: 'status', title: '凭证状态' ,align:'center',templet:function(d){
+                        if(d.status===0)return "未选择"
+                        else if(d.status===1)return "正在写入"
+                        else if(d.status===2)return "已完成"
+                        else if(d.status===-1)return "失败"
+                    }},
+                    { field: 'voucherMsg', title: '凭证信息' ,align:'center'},
+                    { field: 'errorMsg', title: '错误信息' ,align:'center'}
+                ]],
+                page: true,
+                loading: true,
+                where: {
+                    username:'admin',
+                    pageSize:10
+                }
+
+            })
+            
+            
+                document.getElementById("send").addEventListener("click",function(){
+                var checkStatus=table.checkStatus('voucher');
+                var data=[];
+                for(  i = 0;i<checkStatus.data.length;i++){
+                    data.push(checkStatus.data[i].tVoucher);
+                }
+                
+        
+                $.ajax({
+                    type:"get",
+                    url:"https://localhost:44379/api/voucher/send?json="+data.toString(),
+                    success:function (data,status) { 
+                        table.reload('voucher',{
+                            url:'https://localhost:44379/api/voucher/fetch',
+                            where: {
+                                     username:'admin',
+                                      pageSize:10
+                                    }
+                        })
+                     },
+                    
+                    })
+                })
+
+
+            })
+            
+        
+    </script>
+</body>
+</html>
